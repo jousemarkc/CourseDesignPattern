@@ -10,12 +10,17 @@ from .commons import CustomerData, PaymentData, PaymentResponse
 @dataclass
 class PaymentService:
     payment_processor: PaymentProcessorProtocol
-    refund_processor: Optional[RefundPaymentProtocol] = None
-    recurring_processor: Optional[RecurringPaymentProtocol] = None
-    notifier: Optional[NotifierProtocol] = None
+    notifier: NotifierProtocol
     customer_validator: CustomerValidator 
     payment_validator: PaymentDataValidator 
     logger: TransactionLogger 
+    refund_processor: Optional[RefundPaymentProtocol] = None
+    recurring_processor: Optional[RecurringPaymentProtocol] = None
+
+    # Method that let us to change strategy to the notifier
+    def set_notifier(self, notifier: NotifierProtocol):
+        print("Changing the notifier implementation")
+        self.notifier = notifier
 
     def process_transaction(
         self, customer_data: CustomerData, payment_data: PaymentData
