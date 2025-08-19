@@ -6,9 +6,10 @@ from validators import CustomerValidator, PaymentDataValidator
 from loggers import TransactionLogger
 from commons import CustomerData, PaymentData, PaymentResponse
 from factory import PaymentProcessorFactory
+from services_protocol import PaymentServiceProtocol
 
 @dataclass
-class PaymentService:
+class PaymentService(PaymentServiceProtocol):
     payment_processor: PaymentProcessorProtocol
     notifier: NotifierProtocol
     customer_validator: CustomerValidator 
@@ -21,7 +22,7 @@ class PaymentService:
     def create_with_payment_processor(cls, payment_data: PaymentData, **kwargs) -> Self:
         try:
             processor = PaymentProcessorFactory.create_payment_processor(payment_data)
-            return cls(payment_processor=processor, **kwargs)
+            return processor
         except ValueError as e:
             print('Error creating class.')
             raise e

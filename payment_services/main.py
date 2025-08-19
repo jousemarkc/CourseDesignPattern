@@ -3,6 +3,7 @@ from services import PaymentService
 from loggers import TransactionLogger
 from validators import CustomerValidator, PaymentDataValidator
 from commons import CustomerData, ContactInfo, PaymentData
+from logging_service import PaymentServiceLogging
 
 
 def get_email_notifier() -> EmailNotifier:
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     customer_validator = CustomerValidator()
     payment_data_validator = PaymentDataValidator()
     logger = TransactionLogger()
-    payment_data = PaymentData(amount=150, source='tok_mastercard', currency='USD')
+    payment_data = PaymentData(amount=512, source='tok_mastercard', currency='USD')
 
     service = PaymentService.create_with_payment_processor(
         payment_data=payment_data,
@@ -43,3 +44,8 @@ if __name__ == '__main__':
         payment_validator=payment_data_validator,
         logger=logger
     )
+
+    process_service = service.process_transaction(customer_data=customer_data, payment_data=payment_data)
+
+    logging_service = PaymentServiceLogging(wrapped=service)
+    logging_service.process_refund(transaction_id=process_service.transaction_id)

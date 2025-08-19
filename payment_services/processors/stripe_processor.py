@@ -35,7 +35,7 @@ class StripePaymentProcessor(PaymentProcessorProtocol, RefundPaymentProtocol, Re
                 message=str(e),
             )
 
-    def refund_payment(self, transaction_id: str) -> PaymentResponse:
+    def process_refund(self, transaction_id: str) -> PaymentResponse:
         stripe.api_key = os.getenv("STRIPE_API_KEY")
         try:
             refund = stripe.Refund.create(charge=transaction_id)
@@ -55,7 +55,7 @@ class StripePaymentProcessor(PaymentProcessorProtocol, RefundPaymentProtocol, Re
                 message=str(e),
             )
 
-    def setup_recurring_payment(
+    def setup_recurring(
         self, customer_data: CustomerData, payment_data: PaymentData
     ) -> PaymentResponse:
         stripe.api_key = os.getenv("STRIPE_API_KEY")
