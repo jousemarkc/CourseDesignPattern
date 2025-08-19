@@ -1,11 +1,11 @@
 from dataclasses import dataclass
-from typing import Optional
-from .processors import PaymentProcessorProtocol, RefundPaymentProtocol, RecurringPaymentProtocol
-from .notifier import NotifierProtocol
-from .validators import CustomerValidator, PaymentDataValidator
-from .loggers import TransactionLogger
-from .commons import CustomerData, PaymentData, PaymentResponse
-
+from typing import Optional, Self
+from processors import PaymentProcessorProtocol, RefundPaymentProtocol, RecurringPaymentProtocol
+from notifier import NotifierProtocol
+from validators import CustomerValidator, PaymentDataValidator
+from loggers import TransactionLogger
+from commons import CustomerData, PaymentData, PaymentResponse
+from factory import PaymentProcessorFactory
 
 @dataclass
 class PaymentService:
@@ -16,6 +16,16 @@ class PaymentService:
     logger: TransactionLogger 
     refund_processor: Optional[RefundPaymentProtocol] = None
     recurring_processor: Optional[RecurringPaymentProtocol] = None
+
+    @classmethod
+    def create_with_payment_processor(cls, payment_data: PaymentData, **kwargs) -> Self:
+        try:
+            processor = PaymentProcessorFactory.create_payment_processor(payment_data)
+            return cls(payment_processor=processor, **kwargs)
+        except ValueError as e:
+            print('Error creating class.')
+            raise e
+
 
     # Method that let us to change strategy to the notifier
     def set_notifier(self, notifier: NotifierProtocol):
