@@ -30,10 +30,10 @@ def get_customer_data() -> CustomerData:
 if __name__ == '__main__':
     customer_data = get_customer_data()
 
-    payment_data = PaymentData(amount=2048, source='tok_mastercard', currency='USD')
+    payment_data = PaymentData(amount=111, source='tok_mastercard', currency='USD')
 
     builder = PaymentServiceBuilder()
 
-    service = builder.set_logger().set_payment_validator().set_customer_validator().set_payment_processor(payment_data).set_notifier(customer_data).build()
+    service = builder.set_logger().set_payment_validator().set_customer_validator().set_payment_processor(payment_data).set_notifier(customer_data).set_listeners().build()
 
     process_service = service.process_transaction(customer_data=customer_data, payment_data=payment_data)

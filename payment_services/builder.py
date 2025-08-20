@@ -7,6 +7,7 @@ from loggers import TransactionLogger
 from commons import PaymentData, CustomerData
 from factory import PaymentProcessorFactory
 from services import PaymentService
+from listeners import ListenersManager, AccountabilityListener
 
 
 @dataclass
@@ -16,6 +17,7 @@ class PaymentServiceBuilder:
     customer_validator: Optional[CustomerValidator] = None
     payment_validator: Optional[PaymentDataValidator] = None
     logger: Optional[TransactionLogger] = None
+    listener: Optional[ListenersManager] = None
 
     def set_logger(self) -> Self:
         self.logger = TransactionLogger()
@@ -42,7 +44,14 @@ class PaymentServiceBuilder:
             return self
         else:
             raise ValueError('Can not select notifier class.')
-        
+
+    def set_listeners(self) -> Self:
+        listener = ListenersManager()
+        acountability_listener = AccountabilityListener()
+        listener.subscribe(acountability_listener)
+        self.listener = listener
+        return self
+
     def build(self):
         if not all([
             self.payment_processor,
@@ -50,6 +59,7 @@ class PaymentServiceBuilder:
             self.customer_validator,
             self.payment_validator,
             self.logger,
+            self.listener
         ]):
             missing = [
                 name 
@@ -59,6 +69,7 @@ class PaymentServiceBuilder:
                     ('customer_validator', self.customer_validator),
                     ('payment_validator', self.payment_validator),
                     ('logger', self.logger),
+                    ('listener', self.listener)
                 ]
                 if value is None
             ]
@@ -69,4 +80,5 @@ class PaymentServiceBuilder:
             customer_validator=self.customer_validator,
             payment_validator=self.payment_validator,
             logger=self.logger,
+            listeners=self.listener
         )
