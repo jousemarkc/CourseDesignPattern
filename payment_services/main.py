@@ -30,7 +30,7 @@ def get_customer_data() -> CustomerData:
 if __name__ == '__main__':
     customer_data = get_customer_data()
 
-    payment_data = PaymentData(amount=111, source='tok_mastercard', currency='USD')
+    payment_data = PaymentData(amount=444, source='tok_mastercard', currency='USD')
 
     builder = PaymentServiceBuilder()
 

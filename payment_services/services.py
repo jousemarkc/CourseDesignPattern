@@ -43,7 +43,10 @@ class PaymentService(PaymentServiceProtocol):
         payment_response = self.payment_processor.process_transaction(
             customer_data, payment_data
         )
-        self.listeners.notifyAll(f'Successful Payment to event: {payment_response.transaction_id}')
+        if payment_response.status == 'succeeded':
+            self.listeners.notifyAll(f'Successful Payment to event: {payment_response.transaction_id}')
+        else:
+            self.listeners.notifyAll(f'Payment failed: {payment_response.transaction_id}')
         self.notifier.send_confirmation(customer_data)
         self.logger.log_transaction(
             customer_data, payment_data, payment_response
