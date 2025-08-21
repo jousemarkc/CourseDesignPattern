@@ -2,19 +2,19 @@ from dataclasses import dataclass
 from typing import Optional, Self
 from processors import PaymentProcessorProtocol, RefundPaymentProtocol, RecurringPaymentProtocol
 from notifier import NotifierProtocol
-from validators import CustomerValidator, PaymentDataValidator
 from loggers import TransactionLogger
-from commons import CustomerData, PaymentData, PaymentResponse
+from commons import CustomerData, PaymentData, PaymentResponse, Request
 from factory import PaymentProcessorFactory
 from services_protocol import PaymentServiceProtocol
 from listeners import ListenersManager
+from validators import ChainHandler
+
 
 @dataclass
 class PaymentService(PaymentServiceProtocol):
     payment_processor: PaymentProcessorProtocol
     notifier: NotifierProtocol
-    customer_validator: CustomerValidator 
-    payment_validator: PaymentDataValidator 
+    validators: ChainHandler
     logger: TransactionLogger
     listeners: ListenersManager
     refund_processor: Optional[RefundPaymentProtocol] = None
@@ -38,8 +38,12 @@ class PaymentService(PaymentServiceProtocol):
     def process_transaction(
         self, customer_data: CustomerData, payment_data: PaymentData
     ) -> PaymentResponse:
-        self.customer_validator.validate(customer_data)
-        self.payment_validator.validate(payment_data)
+        try:
+            request = Request(customer_data=customer_data, payment_data=payment_data)
+            self.validators.handle(request=request)
+        except Exception as e:
+            print(f'Validations failed {e}')
+            raise e
         payment_response = self.payment_processor.process_transaction(
             customer_data, payment_data
         )

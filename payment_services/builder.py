@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional, Self
 from processors import PaymentProcessorProtocol
 from notifier import NotifierProtocol, EmailNotifier, SMSNotifier
-from validators import CustomerValidator, PaymentDataValidator
+from validators import ChainHandler, CustomerHandler, PaymentHandler
 from loggers import TransactionLogger
 from commons import PaymentData, CustomerData
 from factory import PaymentProcessorFactory
@@ -14,8 +14,7 @@ from listeners import ListenersManager, AccountabilityListener
 class PaymentServiceBuilder:
     payment_processor: Optional[PaymentProcessorProtocol] = None
     notifier: Optional[NotifierProtocol] = None
-    customer_validator: Optional[CustomerValidator] = None
-    payment_validator: Optional[PaymentDataValidator] = None
+    validator : Optional[ChainHandler] = None
     logger: Optional[TransactionLogger] = None
     listener: Optional[ListenersManager] = None
 
@@ -23,16 +22,16 @@ class PaymentServiceBuilder:
         self.logger = TransactionLogger()
         return self
     
-    def set_payment_validator(self) -> Self:
-        self.payment_validator = PaymentDataValidator()
-        return self
-    
-    def set_customer_validator(self) -> Self:
-        self.customer_validator = CustomerValidator()
-        return self
     
     def set_payment_processor(self, payment_data: PaymentData) -> Self:
         self.payment_processor = PaymentProcessorFactory.create_payment_processor(payment_data)
+        return self
+    
+    def set_chain_of_validations(self) -> Self:
+        customer_handler = CustomerHandler()
+        payment_handler = PaymentHandler()
+        customer_handler.set_next(payment_handler)
+        self.validator = customer_handler
         return self
     
     def set_notifier(self, customer_data: CustomerData) -> Self:
@@ -56,8 +55,7 @@ class PaymentServiceBuilder:
         if not all([
             self.payment_processor,
             self.notifier,
-            self.customer_validator,
-            self.payment_validator,
+            self.validator,
             self.logger,
             self.listener
         ]):
@@ -66,8 +64,7 @@ class PaymentServiceBuilder:
                 for name, value in [
                     ('payment_processor', self.payment_processor),
                     ('notifier', self.notifier),
-                    ('customer_validator', self.customer_validator),
-                    ('payment_validator', self.payment_validator),
+                    ('validator', self.validator),
                     ('logger', self.logger),
                     ('listener', self.listener)
                 ]
@@ -77,8 +74,7 @@ class PaymentServiceBuilder:
         return PaymentService(
             payment_processor=self.payment_processor,
             notifier=self.notifier,
-            customer_validator=self.customer_validator,
-            payment_validator=self.payment_validator,
+            validators=self.validator,
             logger=self.logger,
             listeners=self.listener
         )
